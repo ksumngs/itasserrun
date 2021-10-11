@@ -32,15 +32,26 @@ sed -i 's/-//g' "$INPUTFILE"
 csplit -s -z "${INPUTFILE}" '/>/' '{*}'
 mkdir _OUTPUT
 
-# Send the files to their own folders
-for FASTAFILE in ./xx*; do
+# Find the number of parallel batches that we can start
+# I-TASSER runs use a maximum of 16 cpus from my experience
+N=$(( $(nproc) / 16 ))
+
+# Declare a function to run I-TASSER on a single sample
+sampleitasser() {
+  FASTAFILE="${1}"
   HEADER="$(head -n1 "$FASTAFILE")"
   SAMPLENAME=${HEADER/\>/}
   mkdir "$SAMPLENAME"
   mv "$FASTAFILE" "${SAMPLENAME}/seq.fasta"
   /opt/I-TASSER5.1/I-TASSERmod/runI-TASSER.pl -libdir /opt/ITLIB -datadir "$(realpath "$SAMPLENAME")" -seqname "$SAMPLENAME" -runstyle gnuparallel
   python /opt/I-TASSER5.1/file2html/file2html.py "$(realpath "$SAMPLENAME")"
-  cp "${SAMPLENAME}/result.tar.bz2" "_OUTPUT/${SAMPLENAME}_results.tar.bz2"
+  cp "${SAMPLENAME}/result.tar.bz2" "_OUTPUT/${SAMPLENAME}_results.tar.bz2"  
+}
+
+# Send the files to their own folders
+for FASTAFILE in ./xx*; do
+  ((i=i%N)); ((i++==0)) && wait
+  sampleitasser "$FASTAFILE" &
 done > >(tee -a "$INPUTNAME.out") 2> >(tee -a "$INPUTNAME.err" >&2)
 
 parallel tar xjvf ::: "_OUTPUT/*_results.tar.bz2"
