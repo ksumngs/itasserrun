@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Bring in the protein fasta
+INPUTFILE="${1}"
+
+# Remove invalid characters from the filename
+INPUTFILE=${INPUTFILE// /_}
+INPUTFILE=${INPUTFILE//\(/}
+INPUTFILE=${INPUTFILE//\)/}
+
+# Move the file to its new name
+mv -v "${1}" "$INPUTFILE"
+
+# Get the updated file identifier
+INPUTNAME=${INPUTFILE/.fasta/}
+
+# Reformat the fasta if it's in DOS format
+dos2unix "$INPUTFILE"
+
+# Remove common CLC nonsense that can foul up naming
+sed -i 's/_(paired)_/_/g' "$INPUTFILE"
+sed -i 's/_(paired,_trimmed_pairs)_/_/g' "$INPUTFILE"
+
+# Remove invalid amino acids
+sed -i 's/-//g' "$INPUTFILE"
+
+# Create the separated fasta files
+csplit -s -z "${INPUTFILE}" '/>/' '{*}'
+mkdir _OUTPUT
+
+# Send the files to their own folders
+for FASTAFILE in ./xx*; do
+  HEADER="$(head -n1 "$FASTAFILE")"
+  SAMPLENAME=${HEADER/\>/}
+  mkdir "$SAMPLENAME"
+  mv "$FASTAFILE" "${SAMPLENAME}/seq.fasta"
+  /opt/I-TASSER5.1/I-TASSERmod/runI-TASSER.pl -libdir /opt/ITLIB -datadir "$(realpath "$SAMPLENAME")" -seqname "$SAMPLENAME" -runstyle gnuparallel
+  python /opt/I-TASSER5.1/file2html/file2html.py "$(realpath "$SAMPLENAME")"
+  cp "${SAMPLENAME}/result.tar.bz2" "_OUTPUT/${SAMPLENAME}_results.tar.bz2"
+done > >(tee -a "$INPUTNAME.out") 2> >(tee -a "$INPUTNAME.err" >&2)
+
+parallel tar xjvf ::: "_OUTPUT/*_results.tar.bz2"
+zip -r9 "${INPUTNAME}.zip" _OUTPUT/* "${INPUTNAME}.out" "${INPUTNAME}.err"
