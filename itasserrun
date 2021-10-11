@@ -2,7 +2,7 @@
 
 # Check if the correct conda environment is activated
 [[ "$CONDA_DEFAULT_ENV" =~ "I-TASSER" ]] || \
-  { printf "The I-TASSER conda envirnoment must be activated before running itasserrun! Execute\n\tconda activate I-TASSER\nand then try to restart itasserrun\n"; exit 127; }
+  { printf "The I-TASSER conda envirnoment must be activated before running itasserrun! Execute\n\tconda activate I-TASSER\nand then try to restart itasserrun\n"; exit 3; }
 
 # Start a GNU parallel session
 # shellcheck disable=SC1090
