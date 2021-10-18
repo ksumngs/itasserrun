@@ -56,5 +56,7 @@ sampleitasser() {
 # Send the files to their own folders
 env_parallel -kj${N} sampleitasser ::: ./xx* > >(tee -a "$INPUTNAME.out") 2> >(tee -a "$INPUTNAME.err" >&2)
 
-parallel tar xjvf ::: "_OUTPUT/*_results.tar.bz2"
+cd _OUTPUT || exit 4
+parallel tar xjvf ::: *_results.tar.bz2
+cd .. || exit 1
 zip -r9 "${INPUTNAME}.zip" _OUTPUT/* "${INPUTNAME}.out" "${INPUTNAME}.err"
