@@ -2,7 +2,7 @@
 
 # Check if the correct conda environment is activated
 [[ "$CONDA_DEFAULT_ENV" =~ "I-TASSER" ]] || \
-  { printf "The I-TASSER conda envirnoment must be activated before running itasserrun! Execute\n\tconda activate I-TASSER\nand then try to restart itasserrun\n"; exit 3; }
+  { printf "The I-TASSER conda environment must be activated before running itasserrun! Execute\n\tconda activate I-TASSER\nand then try to restart itasserrun\n"; exit 3; }
 
 # Start a GNU parallel session
 # shellcheck disable=SC1090
@@ -38,7 +38,7 @@ csplit -s -z "${INPUTFILE}" '/>/' '{*}'
 mkdir _OUTPUT
 
 # Find the number of parallel batches that we can start
-# I-TASSER runs use a maximum of 16 cpus from my experience
+# I-TASSER runs use a maximum of 16 CPUs from my experience
 N=$(( $(nproc) / 16 ))
 
 # Declare a function to run I-TASSER on a single sample
@@ -50,7 +50,7 @@ sampleitasser() {
   mv "$FASTAFILE" "${SAMPLENAME}/seq.fasta"
   /opt/I-TASSER5.1/I-TASSERmod/runI-TASSER.pl -libdir /opt/ITLIB -datadir "$(realpath "$SAMPLENAME")" -seqname "$SAMPLENAME" -runstyle gnuparallel
   python /opt/I-TASSER5.1/file2html/file2html.py "$(realpath "$SAMPLENAME")"
-  cp "${SAMPLENAME}/result.tar.bz2" "_OUTPUT/${SAMPLENAME}_results.tar.bz2"  
+  cp "${SAMPLENAME}/result.tar.bz2" "_OUTPUT/${SAMPLENAME}_results.tar.bz2"
 }
 
 # Send the files to their own folders
