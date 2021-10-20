@@ -58,5 +58,6 @@ env_parallel -kj${N} sampleitasser ::: ./xx* > >(tee -a "$INPUTNAME.out") 2> >(t
 
 cd _OUTPUT || exit 4
 parallel tar xjvf ::: *_results.tar.bz2
+rm *_results.tar.bz2
 cd .. || exit 1
 zip -r9 "${INPUTNAME}.zip" _OUTPUT/* "${INPUTNAME}.out" "${INPUTNAME}.err"
